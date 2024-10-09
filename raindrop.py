@@ -5,8 +5,8 @@ from plotly.subplots import make_subplots
 
 def make_raindrop_chart(
     ticker: str = "AAPL",
-    start: str = None,  # Removed default, expects input from app.py
-    end: str = None,    # Removed default, expects input from app.py
+    start: str = None, 
+    end: str = None,  
     interval: str = "5m",
     frequency_unit: str = "m",
     frequency_value: int = 30,
@@ -177,11 +177,9 @@ def make_raindrop_chart(
             height=800,
             uirevision="uirevision"
         )
-        return fig, ohlc
+        
+        # Return all 4 expected values
+        return fig, vwap_open, vwap_close, ohlc.to_dict("records")[-1]
 
     except Exception as e:
         raise ValueError(f"An error occurred while generating the chart: {e}")
-
-if __name__ == "__main__":
-    raindrop = make_raindrop_chart()[0]
-    raindrop.show("browser")
