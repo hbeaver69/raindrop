@@ -12,12 +12,20 @@ def make_raindrop_chart(
     frequency_value: int = 30,
     margin: float = 0.1
 ) -> go.Figure:
+    # Download data from yfinance
     df = yf.download(
         tickers=ticker,
         start=start,
         end=end,
         interval=interval,
-    ).reset_index()
+    )
+
+    # Reset the index to turn the Datetime index into a column
+    df = df.reset_index()
+
+    # Rename the index to 'Datetime' if it exists in the index
+    if 'Datetime' not in df.columns:
+        df.rename(columns={'index': 'Datetime'}, inplace=True)
 
     # Check if 'Datetime' column exists
     if 'Datetime' not in df.columns:
@@ -32,12 +40,15 @@ def make_raindrop_chart(
     # Drop rows where 'Datetime' could not be parsed
     df = df.dropna(subset=['Datetime'])
 
+    # Create 'Typical' price and calculate VWAP
     df["Typical"] = df[["Open", "High", "Low", "Close"]].sum(axis=1)/4
     df["QTY*PX"] = df["Volume"] * df["Typical"]
 
+    # Grouping frequency
     grouping_frequency = pd.Timedelta(frequency_value, unit=frequency_unit)
     split_frequency = pd.Timedelta(grouping_frequency.total_seconds() / 2, unit="s")
 
+    # Group the OHLC data
     ohlc = df.groupby(pd.Grouper(key="Datetime", freq=grouping_frequency)).agg(
         Open=("Open", "first"),
         High=("High", "max"),
@@ -46,11 +57,14 @@ def make_raindrop_chart(
         Volume=("Volume", "sum")
     )
     ohlc = ohlc.query("Volume > 0").reset_index()
+
+    # Create split for raindrop chart
     df["Split"] = df.groupby(pd.Grouper(key="Datetime", freq=split_frequency)).ngroup()
     df["Split"] = df["Split"] % 2
     df["Datetime"] = df["Datetime"].dt.floor(grouping_frequency)
     volume_divider = df["Volume"].max()/1000
 
+    # Plot
     fig = make_subplots(
         rows=3,
         cols=1,
@@ -75,7 +89,6 @@ def make_raindrop_chart(
             period_df["Volume"] = period_df["Volume"].div(volume_divider).round()
             for split, split_df in period_df.groupby("Split"):
                 is_pre_split = split == 0
-                # We multiply each row by volume of the trade
                 split_df = split_df.loc[split_df.index.repeat(split_df["Volume"])]
                 fig.add_trace(
                     go.Violin(
