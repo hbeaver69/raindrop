@@ -2,11 +2,12 @@ import pandas as pd
 import yfinance as yf
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from datetime import datetime, timedelta  # Import datetime for dynamic date handling
 
 def make_raindrop_chart(
     ticker: str = "AAPL",
-    start: str = "2022-01-10",
-    end: str = "2022-01-11",
+    start: str = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d'),  # Last 7 days
+    end: str = datetime.now().strftime('%Y-%m-%d'),  # Today's date
     interval: str = "5m",
     frequency_unit: str = "m",
     frequency_value: int = 30,
@@ -23,13 +24,8 @@ def make_raindrop_chart(
     # Reset the index to turn the Datetime index into a column
     df = df.reset_index()
 
-    # Print the columns to debug if 'Datetime' exists
-    print("DataFrame columns:", df.columns)
-
-    # Rename the index to 'Datetime' if it exists in the index
+    # Rename the index to 'Datetime' if necessary
     if 'Datetime' not in df.columns:
-        # Try renaming the first column if it is the datetime index
-        print("Renaming 'Date' or index column to 'Datetime'")
         df.rename(columns={df.columns[0]: 'Datetime'}, inplace=True)
 
     # Check if 'Datetime' column exists
@@ -37,16 +33,11 @@ def make_raindrop_chart(
         raise KeyError("The 'Datetime' column is not present in the DataFrame.")
 
     # Convert 'Datetime' column to datetime format
-    try:
-        df['Datetime'] = pd.to_datetime(df['Datetime'], errors='coerce')
-    except Exception as e:
-        raise ValueError(f"Error converting 'Datetime' column to datetime format: {e}")
-
-    # Drop rows where 'Datetime' could not be parsed
+    df['Datetime'] = pd.to_datetime(df['Datetime'], errors='coerce')
     df = df.dropna(subset=['Datetime'])
 
     # Create 'Typical' price and calculate VWAP
-    df["Typical"] = df[["Open", "High", "Low", "Close"]].sum(axis=1)/4
+    df["Typical"] = df[["Open", "High", "Low", "Close"]].sum(axis=1) / 4
     df["QTY*PX"] = df["Volume"] * df["Typical"]
 
     # Grouping frequency
@@ -60,8 +51,7 @@ def make_raindrop_chart(
         Low=("Low", "min"),
         Close=("Close", "last"),
         Volume=("Volume", "sum")
-    )
-    ohlc = ohlc.query("Volume > 0").reset_index()
+    ).reset_index()
 
     # Create split for raindrop chart
     df["Split"] = df.groupby(pd.Grouper(key="Datetime", freq=split_frequency)).ngroup()
@@ -175,7 +165,7 @@ def make_raindrop_chart(
         height=800,
         uirevision="uirevision"
     )
-    return fig, vwap_open, vwap_close, ohlc.to_dict("records")[-1]
+    return fig, ohlc
 
 
 if __name__ == "__main__":
