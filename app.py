@@ -12,16 +12,16 @@ tickers = pd.read_csv("tickers.csv")
 # Streamlit App Title
 st.title("Raindrop Charts using Yfinance, Streamlit, & Plotly")
 
-# Automatically use the last 7 days
+# Automatically set the date range to the last 7 days
 start_date = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
 end_date = datetime.now().strftime("%Y-%m-%d")
 
-# Sidebar inputs (without date selector)
+# Sidebar inputs (without any date selector)
 company = st.sidebar.selectbox(label="Company", options=tickers["Company"])
 vwap_margin = st.sidebar.number_input(label="VWAP Margin", value=0.1, step=0.01, min_value=0., format="%.2f")
 
-# Increase bin size flexibility beyond 60 minutes (up to 1440 minutes, i.e., 1 day)
-frequency = st.sidebar.number_input(label="Bin Size (minutes)", value=30, step=1, min_value=5, max_value=1440)  # Allow up to 1 day
+# Allow larger bin sizes up to 1440 minutes (1 day)
+frequency = st.sidebar.number_input(label="Bin Size (minutes)", value=30, step=1, min_value=5, max_value=1440)
 
 # Get the ticker symbol for the selected company
 ticker = tickers.loc[tickers["Company"] == company, "Ticker"].values[0]
