@@ -5,7 +5,7 @@ from raindrop import make_raindrop_chart
 
 st.set_page_config(layout="wide", page_title="Raindrop Charts")
 tickers = pd.read_csv("tickers.csv")
-st.title("Raindrop Charts using Yfinance, Streamlit, & Plotly")
+st.title("[Suitable Hope] Raindrop Candles")
 
 default_date = pd.Timestamp.now()
 default_date -= pd.offsets.BusinessDay(1)
