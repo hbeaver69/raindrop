@@ -24,5 +24,4 @@ raindrop_chart, vwap_open, vwap_close, ohlc = make_raindrop_chart(
     frequency_value=frequency,
     margin=vwap_margin
 )
-col1, col2, col3 = st.columns(3)
 st.plotly_chart(raindrop_chart, use_container_width=True)
