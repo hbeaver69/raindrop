@@ -2,18 +2,21 @@ import pandas as pd
 import yfinance as yf
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from datetime import datetime, timedelta
 
 def make_raindrop_chart(
     ticker: str = "AAPL",
-    start: str = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d'),
-    end: str = datetime.now().strftime('%Y-%m-%d'),
+    start: str = None,  # Removed default, expects input from app.py
+    end: str = None,    # Removed default, expects input from app.py
     interval: str = "5m",
     frequency_unit: str = "m",
     frequency_value: int = 30,
     margin: float = 0.1
 ):
     try:
+        # Ensure start and end dates are provided
+        if not start or not end:
+            raise ValueError("Start and End dates must be provided.")
+
         # Download data from yfinance
         df = yf.download(
             tickers=ticker,
@@ -177,7 +180,6 @@ def make_raindrop_chart(
         return fig, ohlc
 
     except Exception as e:
-        # Catch any exception and display the error message for easier debugging
         raise ValueError(f"An error occurred while generating the chart: {e}")
 
 if __name__ == "__main__":
