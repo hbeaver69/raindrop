@@ -2,12 +2,12 @@ import pandas as pd
 import yfinance as yf
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from datetime import datetime, timedelta  # Import datetime for dynamic date handling
+from datetime import datetime, timedelta
 
 def make_raindrop_chart(
     ticker: str = "AAPL",
-    start: str = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d'),  # Last 7 days
-    end: str = datetime.now().strftime('%Y-%m-%d'),  # Today's date
+    start: str = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d'),
+    end: str = datetime.now().strftime('%Y-%m-%d'),
     interval: str = "5m",
     frequency_unit: str = "m",
     frequency_value: int = 30,
@@ -21,6 +21,10 @@ def make_raindrop_chart(
         interval=interval,
     )
 
+    # Check if the DataFrame is empty
+    if df.empty:
+        raise ValueError(f"No data returned for {ticker} between {start} and {end}. Check if the ticker is correct or if there's data available in this range.")
+    
     # Reset the index to turn the Datetime index into a column
     df = df.reset_index()
 
@@ -53,6 +57,10 @@ def make_raindrop_chart(
         Volume=("Volume", "sum")
     ).reset_index()
 
+    # Check if ohlc is empty
+    if ohlc.empty:
+        raise ValueError(f"No data available after processing for {ticker}. Try using a different date range or frequency.")
+    
     # Create split for raindrop chart
     df["Split"] = df.groupby(pd.Grouper(key="Datetime", freq=split_frequency)).ngroup()
     df["Split"] = df["Split"] % 2
