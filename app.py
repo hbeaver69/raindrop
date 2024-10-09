@@ -30,23 +30,31 @@ if pd.Timestamp(date) >= pd.Timestamp.now().floor("d"):
     # Auto-refresh every 5 seconds
     count = st_autorefresh(interval=5000, limit=100, key="fizzbuzzcounter")
 
-# Generate raindrop chart using the inputs
-raindrop_chart, vwap_open, vwap_close, ohlc = make_raindrop_chart(
-    ticker=ticker,
-    start=date.strftime("%Y-%m-%d"),
-    end=(date + pd.Timedelta(days=1)).strftime("%Y-%m-%d"),
-    interval="1m",
-    frequency_value=frequency,
-    margin=vwap_margin
-)
+# Try generating the raindrop chart with error handling
+try:
+    raindrop_chart, vwap_open, vwap_close, ohlc = make_raindrop_chart(
+        ticker=ticker,
+        start=date.strftime("%Y-%m-%d"),
+        end=(date + pd.Timedelta(days=1)).strftime("%Y-%m-%d"),
+        interval="1m",
+        frequency_value=frequency,
+        margin=vwap_margin
+    )
 
-# Create 3 columns for displaying metrics
-col1, col2, col3 = st.columns(3)
+    # Create 3 columns for displaying metrics
+    col1, col2, col3 = st.columns(3)
 
-# Display VWAP metrics
-col1.metric("VWAP (Current vs Previous)", f"{str(vwap_close)}$", f"{str(vwap_close - vwap_open)}$")
-col2.metric("Current Prices (Close vs Open)", f"{str(ohlc['Close'])}$", f"{str(ohlc['Close'] - ohlc['Open'])}$")
-col3.metric("Last Update", str(pd.Timestamp.now().floor("s")))
+    # Display VWAP metrics
+    col1.metric("VWAP (Current vs Previous)", f"{str(vwap_close)}$", f"{str(vwap_close - vwap_open)}$")
+    col2.metric("Current Prices (Close vs Open)", f"{str(ohlc['Close'])}$", f"{str(ohlc['Close'] - ohlc['Open'])}$")
+    col3.metric("Last Update", str(pd.Timestamp.now().floor("s")))
 
-# Display the raindrop chart
-st.plotly_chart(raindrop_chart, use_container_width=True)
+    # Display the raindrop chart
+    st.plotly_chart(raindrop_chart, use_container_width=True)
+
+except ValueError as e:
+    # Catch and display detailed error message
+    st.error(f"Error generating raindrop chart: {e}")
+except Exception as e:
+    # Catch any other errors and display message
+    st.error(f"An unexpected error occurred: {e}")
