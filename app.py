@@ -12,7 +12,7 @@ default_date -= pd.offsets.BusinessDay(1)
 date = st.sidebar.date_input(label="Date Range", value=default_date)
 company = st.sidebar.selectbox(label="Company", options=tickers["Company"])
 vwap_margin = st.sidebar.number_input(label="VWAP Margin", value=0.1, step=0.01, min_value=0., format="%.2f")
-frequency = st.sidebar.number_input(label="Bin Size (minutes)", value=30, step=1, min_value=5, max_value=60)
+frequency = st.sidebar.number_input(label="Bin Size (minutes)", value=30, step=1, min_value=5, max_value=1440)
 ticker = tickers.loc[tickers["Company"] == company, "Ticker"].values[0]
 if pd.Timestamp(date) >= pd.Timestamp.now().floor("d"):
     count = st_autorefresh(interval=5000, limit=100, key="fizzbuzzcounter")
