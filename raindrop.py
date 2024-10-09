@@ -2,21 +2,18 @@ import pandas as pd
 import yfinance as yf
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from datetime import datetime, timedelta
 
 def make_raindrop_chart(
     ticker: str = "AAPL",
-    start: str = None, 
-    end: str = None,  
+    start: str = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d'),
+    end: str = datetime.now().strftime('%Y-%m-%d'),
     interval: str = "5m",
     frequency_unit: str = "m",
     frequency_value: int = 30,
     margin: float = 0.1
 ):
     try:
-        # Ensure start and end dates are provided
-        if not start or not end:
-            raise ValueError("Start and End dates must be provided.")
-
         # Download data from yfinance
         df = yf.download(
             tickers=ticker,
@@ -36,10 +33,6 @@ def make_raindrop_chart(
         if 'Datetime' not in df.columns:
             df.rename(columns={df.columns[0]: 'Datetime'}, inplace=True)
 
-        # Check if 'Datetime' column exists
-        if 'Datetime' not in df.columns:
-            raise KeyError("The 'Datetime' column is not present in the DataFrame.")
-
         # Convert 'Datetime' column to datetime format
         df['Datetime'] = pd.to_datetime(df['Datetime'], errors='coerce')
         df = df.dropna(subset=['Datetime'])
@@ -48,7 +41,7 @@ def make_raindrop_chart(
         df["Typical"] = df[["Open", "High", "Low", "Close"]].sum(axis=1) / 4
         df["QTY*PX"] = df["Volume"] * df["Typical"]
 
-        # Grouping frequency
+        # Adjust grouping frequency for larger bin sizes
         grouping_frequency = pd.Timedelta(frequency_value, unit=frequency_unit)
         split_frequency = pd.Timedelta(grouping_frequency.total_seconds() / 2, unit="s")
 
@@ -129,57 +122,3 @@ def make_raindrop_chart(
                 name="OHLC",
                 decreasing_line_color="red",
                 increasing_line_color="green",
-            ),
-            row=2,
-            col=1
-        )
-
-        ohlc["BarColor"] = ohlc.apply(lambda x: "green" if x["Open"] < x["Close"] else "red", axis=1)
-        showlegend = True
-        for color, sub_ohlc in ohlc.groupby("BarColor"):
-            fig.add_trace(
-                go.Bar(
-                    x=sub_ohlc["Datetime"],
-                    y=sub_ohlc["Volume"],
-                    marker=dict(color=color),
-                    legendgroup="Volume",
-                    name="Volume",
-                    showlegend=showlegend,
-                    hovertemplate=None,
-                    texttemplate="%{y:.2s}"
-                ),
-                row=3,
-                col=1
-            )
-            showlegend = False
-
-        fig.update_xaxes(
-            rangeslider_visible=False,
-            row=2
-        )
-        fig.update_xaxes(
-            dtick=1000 * grouping_frequency.total_seconds(),
-            showgrid=True,
-            title="Datetime",
-            row=3
-        )
-        fig.update_xaxes(
-            rangebreaks=[dict(bounds=[16, 9.5], pattern="hour")],
-        )
-        fig.update_yaxes(title="Price", row=1)
-        fig.update_yaxes(title="Price", row=2)
-        fig.update_yaxes(title="Volume", row=3)
-        fig.update_layout(
-            title=dict(text=ticker),
-            violingap=0,
-            violingroupgap=0,
-            template="plotly_dark",
-            height=800,
-            uirevision="uirevision"
-        )
-        
-        # Return all 4 expected values
-        return fig, vwap_open, vwap_close, ohlc.to_dict("records")[-1]
-
-    except Exception as e:
-        raise ValueError(f"An error occurred while generating the chart: {e}")
