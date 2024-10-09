@@ -3,11 +3,10 @@ import yfinance as yf
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-
 def make_raindrop_chart(
     ticker: str = "AAPL",
-    start: str = "2024-01-10",
-    end: str = "2024-09-10",
+    start: str = "2022-01-10",
+    end: str = "2022-01-11",
     interval: str = "5m",
     frequency_unit: str = "m",
     frequency_value: int = 30,
@@ -19,6 +18,20 @@ def make_raindrop_chart(
         end=end,
         interval=interval,
     ).reset_index()
+
+    # Check if 'Datetime' column exists
+    if 'Datetime' not in df.columns:
+        raise KeyError("The 'Datetime' column is not present in the DataFrame.")
+
+    # Convert 'Datetime' column to datetime format
+    try:
+        df['Datetime'] = pd.to_datetime(df['Datetime'], errors='coerce')
+    except Exception as e:
+        raise ValueError(f"Error converting 'Datetime' column to datetime format: {e}")
+
+    # Drop rows where 'Datetime' could not be parsed
+    df = df.dropna(subset=['Datetime'])
+
     df["Typical"] = df[["Open", "High", "Low", "Close"]].sum(axis=1)/4
     df["QTY*PX"] = df["Volume"] * df["Typical"]
 
@@ -28,8 +41,8 @@ def make_raindrop_chart(
     ohlc = df.groupby(pd.Grouper(key="Datetime", freq=grouping_frequency)).agg(
         Open=("Open", "first"),
         High=("High", "max"),
-        Low=("Open", "min"),
-        Close=("Open", "last"),
+        Low=("Low", "min"),
+        Close=("Close", "last"),
         Volume=("Volume", "sum")
     )
     ohlc = ohlc.query("Volume > 0").reset_index()
@@ -62,7 +75,7 @@ def make_raindrop_chart(
             period_df["Volume"] = period_df["Volume"].div(volume_divider).round()
             for split, split_df in period_df.groupby("Split"):
                 is_pre_split = split == 0
-                # We multiply each row by volume of the trade. we multiply by 10 since smallest volume is 0.1
+                # We multiply each row by volume of the trade
                 split_df = split_df.loc[split_df.index.repeat(split_df["Volume"])]
                 fig.add_trace(
                     go.Violin(
