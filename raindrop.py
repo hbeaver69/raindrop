@@ -6,11 +6,11 @@ from datetime import datetime, timedelta
 
 def make_raindrop_chart(
     ticker: str = "AAPL",
-    start: str = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d'),
+    start: str = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d'),  # Use last 7 days as default
     end: str = datetime.now().strftime('%Y-%m-%d'),
     interval: str = "5m",
     frequency_unit: str = "m",
-    frequency_value: int = 30,
+    frequency_value: int = 30,  # Adjust based on bin size input
     margin: float = 0.1
 ):
     try:
