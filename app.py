@@ -2,6 +2,7 @@ import pandas as pd
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 from raindrop import make_raindrop_chart
+from datetime import datetime, timedelta
 
 # Set Streamlit page configuration
 st.set_page_config(layout="wide", page_title="Raindrop Charts")
@@ -12,31 +13,27 @@ tickers = pd.read_csv("tickers.csv")
 # Streamlit App Title
 st.title("Raindrop Charts using Yfinance, Streamlit, & Plotly")
 
-# Set default date to the previous business day
-default_date = pd.Timestamp.now()
-default_date -= pd.offsets.BusinessDay(1)
+# Automatically use the last 7 days
+start_date = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+end_date = datetime.now().strftime("%Y-%m-%d")
 
-# Sidebar inputs
-date = st.sidebar.date_input(label="Date Range", value=default_date)
+# Sidebar inputs (without date selector)
 company = st.sidebar.selectbox(label="Company", options=tickers["Company"])
 vwap_margin = st.sidebar.number_input(label="VWAP Margin", value=0.1, step=0.01, min_value=0., format="%.2f")
-frequency = st.sidebar.number_input(label="Bin Size (minutes)", value=30, step=1, min_value=5, max_value=60)
+
+# Increase bin size flexibility beyond 60 minutes
+frequency = st.sidebar.number_input(label="Bin Size (minutes)", value=30, step=1, min_value=5, max_value=1440)  # 1440 = 24 hours
 
 # Get the ticker symbol for the selected company
 ticker = tickers.loc[tickers["Company"] == company, "Ticker"].values[0]
 
-# Check if selected date is valid
-if pd.Timestamp(date) >= pd.Timestamp.now().floor("d"):
-    # Auto-refresh every 5 seconds
-    count = st_autorefresh(interval=5000, limit=100, key="fizzbuzzcounter")
-
-# Try generating the raindrop chart with error handling
+# Try generating the raindrop chart with the last 7 days
 try:
     raindrop_chart, vwap_open, vwap_close, ohlc = make_raindrop_chart(
         ticker=ticker,
-        start=date.strftime("%Y-%m-%d"),
-        end=(date + pd.Timedelta(days=1)).strftime("%Y-%m-%d"),
-        interval="1m",
+        start=start_date,
+        end=end_date,
+        interval="1m",  # You can adjust this based on your needs
         frequency_value=frequency,
         margin=vwap_margin
     )
