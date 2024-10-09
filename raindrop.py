@@ -23,9 +23,14 @@ def make_raindrop_chart(
     # Reset the index to turn the Datetime index into a column
     df = df.reset_index()
 
+    # Print the columns to debug if 'Datetime' exists
+    print("DataFrame columns:", df.columns)
+
     # Rename the index to 'Datetime' if it exists in the index
     if 'Datetime' not in df.columns:
-        df.rename(columns={'index': 'Datetime'}, inplace=True)
+        # Try renaming the first column if it is the datetime index
+        print("Renaming 'Date' or index column to 'Datetime'")
+        df.rename(columns={df.columns[0]: 'Datetime'}, inplace=True)
 
     # Check if 'Datetime' column exists
     if 'Datetime' not in df.columns:
