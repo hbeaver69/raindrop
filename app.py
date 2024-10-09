@@ -24,7 +24,7 @@ raindrop_chart, vwap_open, vwap_close, ohlc = make_raindrop_chart(
     frequency_value=frequency,
     margin=vwap_margin
 )
-//col1, col2, col3 = st.columns(3)
+col1, col2, col3 = st.columns(3)
 //col1.metric("VWAP (Current vs Previous)", f"{str(vwap_close)}$", f"{str(vwap_close - vwap_open)}$")
 //col2.metric("Current Prices (Close vs Open)", f"{str(ohlc['Close'])}$", f"{str(ohlc['Close'] - ohlc['Open'])}$")
 //col3.metric("Last Update", str(pd.Timestamp.now().floor("s")))
