@@ -6,8 +6,8 @@ from plotly.subplots import make_subplots
 
 def make_raindrop_chart(
     ticker: str = "AAPL",
-    start: str = "2022-01-10",
-    end: str = "2022-01-11",
+    start: str = "2024-01-10",
+    end: str = "2024-09-10",
     interval: str = "5m",
     frequency_unit: str = "m",
     frequency_value: int = 30,
